@@ -1,0 +1,17 @@
+clients:
+  hwang:
+    owner_name: 황
+    buildings: [비마관, 새빛관]
+    class_slugs: [bima_2f_corridor, bima_101_front, bima_rooftop, saebit_101_front, saebit_office]
+  shin:
+    owner_name: 신
+    buildings: [참빛관, 비마관]
+    class_slugs: [chambit_1f_corridor, chambit_stairs_2f, bima_2f_corridor, bima_101_front]
+  jung:
+    owner_name: 정
+    buildings: [100주년기념관, 외부]
+    class_slugs: [centennial_2f_lobby, centennial_east_gate, outdoor_basketball, outdoor_central_plaza]
+  kim:
+    owner_name: 김
+    buildings: [화도관, 옥의관]
+    class_slugs: [hwado_1f_corridor, hwado_main_entrance, okui_3f_corridor, okui_elevator]

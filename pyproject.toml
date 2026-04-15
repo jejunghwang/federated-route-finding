@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pangpang-pathfinder"
+version = "0.1.0"
+description = "Federated-inspired closed-set place classification and route guidance MVP"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "PangPang Team" }]
+dependencies = [
+  "torch>=2.1",
+  "torchvision>=0.16",
+  "networkx>=3.0",
+  "opencv-python>=4.8",
+  "gradio>=4.0",
+  "pyyaml>=6.0",
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "scikit-learn>=1.3",
+  "tqdm>=4.66",
+  "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

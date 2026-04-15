@@ -1,0 +1,65 @@
+nodes:
+  - bima_2f_corridor
+  - bima_101_front
+  - bima_rooftop
+  - saebit_101_front
+  - saebit_office
+  - chambit_1f_corridor
+  - chambit_stairs_2f
+  - centennial_2f_lobby
+  - centennial_east_gate
+  - outdoor_basketball
+  - outdoor_central_plaza
+  - hwado_1f_corridor
+  - hwado_main_entrance
+  - okui_3f_corridor
+  - okui_elevator
+edges:
+  - src: bima_2f_corridor
+    dst: bima_101_front
+    weight: 1.0
+    clip_path: data/route_clips/bima_2f_corridor__bima_101_front.mp4
+  - src: bima_2f_corridor
+    dst: bima_rooftop
+    weight: 1.2
+    clip_path: data/route_clips/bima_2f_corridor__bima_rooftop.mp4
+  - src: bima_2f_corridor
+    dst: chambit_1f_corridor
+    weight: 2.0
+    clip_path: data/route_clips/bima_2f_corridor__chambit_1f_corridor.mp4
+  - src: saebit_101_front
+    dst: saebit_office
+    weight: 1.0
+    clip_path: data/route_clips/saebit_101_front__saebit_office.mp4
+  - src: chambit_1f_corridor
+    dst: chambit_stairs_2f
+    weight: 1.0
+    clip_path: data/route_clips/chambit_1f_corridor__chambit_stairs_2f.mp4
+  - src: centennial_2f_lobby
+    dst: centennial_east_gate
+    weight: 1.0
+    clip_path: data/route_clips/centennial_2f_lobby__centennial_east_gate.mp4
+  - src: centennial_east_gate
+    dst: outdoor_central_plaza
+    weight: 1.5
+    clip_path: data/route_clips/centennial_east_gate__outdoor_central_plaza.mp4
+  - src: outdoor_central_plaza
+    dst: outdoor_basketball
+    weight: 1.0
+    clip_path: data/route_clips/outdoor_central_plaza__outdoor_basketball.mp4
+  - src: hwado_1f_corridor
+    dst: hwado_main_entrance
+    weight: 1.0
+    clip_path: data/route_clips/hwado_1f_corridor__hwado_main_entrance.mp4
+  - src: okui_3f_corridor
+    dst: okui_elevator
+    weight: 1.0
+    clip_path: data/route_clips/okui_3f_corridor__okui_elevator.mp4
+  - src: hwado_main_entrance
+    dst: outdoor_central_plaza
+    weight: 1.7
+    clip_path: data/route_clips/hwado_main_entrance__outdoor_central_plaza.mp4
+  - src: outdoor_central_plaza
+    dst: bima_2f_corridor
+    weight: 1.8
+    clip_path: data/route_clips/outdoor_central_plaza__bima_2f_corridor.mp4
