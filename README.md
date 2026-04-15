@@ -1,12 +1,12 @@
 <div align="center">
 
-![PangPang Banner](docs/assets/kw_mascot_banner.svg)
+![연합학습 기반 길찾기 프로그램](docs/assets/kw_title_banner.svg)
 
 # 🐼 PangPang PathFinder
 
 **광운대학교 캠퍼스를 위한 폐쇄형 장소 분류 + 경로 안내 프로토타입**
 
-![Mascot Badge](docs/assets/kw_mascot_badge.svg)
+![광운대 마스코트 네비게이터](docs/assets/kw_mascot_phone.svg)
 
 </div>
 

@@ -1,0 +1,49 @@
+<svg width="1200" height="280" viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#D9F5F5"/>
+      <stop offset="100%" stop-color="#E8FAFF"/>
+    </linearGradient>
+    <linearGradient id="arcA" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1EB4C7"/>
+      <stop offset="100%" stop-color="#3BC6A8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="280" rx="26" fill="url(#bg)"/>
+
+  <path d="M85 196 C218 92,413 80,573 156" fill="none" stroke="url(#arcA)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M85 226 C228 116,430 108,582 176" fill="none" stroke="#61D9D4" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <path d="M603 166 C720 87,872 84,993 138" fill="none" stroke="url(#arcA)" stroke-width="12" stroke-linecap="round"/>
+
+  <g transform="translate(70,124)">
+    <rect x="0" y="0" width="98" height="90" fill="#8BC4D9" stroke="#2A6E84" stroke-width="4"/>
+    <rect x="18" y="-28" width="72" height="28" fill="#B4E0EE" stroke="#2A6E84" stroke-width="4"/>
+    <text x="49" y="54" text-anchor="middle" font-size="22" font-weight="700" fill="#124A5D">A</text>
+  </g>
+
+  <g transform="translate(517,102)">
+    <rect x="0" y="0" width="118" height="108" rx="10" fill="#5CA4C0" stroke="#205C73" stroke-width="4"/>
+    <rect x="20" y="-24" width="78" height="28" fill="#A6DCEB" stroke="#205C73" stroke-width="4"/>
+    <text x="59" y="64" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">GLOBAL</text>
+  </g>
+
+  <g transform="translate(930,58)">
+    <ellipse cx="70" cy="84" rx="48" ry="54" fill="#F3F3F3" stroke="#111" stroke-width="4"/>
+    <path d="M42 38 C52 18,78 20,90 38" fill="none" stroke="#8D0F2D" stroke-width="9"/>
+    <ellipse cx="38" cy="35" rx="16" ry="13" fill="#8D0F2D"/>
+    <ellipse cx="95" cy="42" rx="12" ry="16" fill="#8D0F2D"/>
+    <circle cx="57" cy="84" r="5" fill="#111"/>
+    <circle cx="81" cy="84" r="5" fill="#111"/>
+    <path d="M58 98 Q69 106 81 98" fill="none" stroke="#111" stroke-width="4"/>
+    <rect x="8" y="72" width="28" height="52" rx="7" transform="rotate(-18 8 72)" fill="#F6E2D5" stroke="#111" stroke-width="4"/>
+    <path d="M16 84 L28 78" stroke="#8D0F2D" stroke-width="3"/>
+    <path d="M16 96 L31 90" stroke="#84BE87" stroke-width="3"/>
+  </g>
+
+  <text x="600" y="78" text-anchor="middle" font-family="Arial, sans-serif" font-size="58" font-weight="800" fill="#0D274A">연합학습 기반 길찾기 프로그램</text>
+  <text x="600" y="112" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="600" fill="#1A4F65">PangPang PathFinder · Closed-set Place Classification + Route Guidance</text>
+
+  <text x="168" y="244" text-anchor="middle" font-size="24" font-weight="700" fill="#0F5670">Local Node Cluster</text>
+  <text x="575" y="244" text-anchor="middle" font-size="24" font-weight="700" fill="#0F5670">Global Model</text>
+  <text x="972" y="244" text-anchor="middle" font-size="24" font-weight="700" fill="#0F5670">Path Prediction</text>
+</svg>
