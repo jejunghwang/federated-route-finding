@@ -13,7 +13,7 @@ def main():
             with gr.Tab("Scene B · 길찾기"):
                 build_scene_b()
 
-    demo.launch()
+    demo.launch(server_name="127.0.0.1", server_port=7860)
 
 
 if __name__ == "__main__":
