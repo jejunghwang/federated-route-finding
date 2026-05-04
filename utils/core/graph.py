@@ -1,11 +1,19 @@
-"""Dummy graph — 추후 실제 graph + BFS로 교체."""
+"""Thin wrapper kept for the legacy ``utils/`` Gradio scaffold.
+
+The single source of truth for graph topology lives in ``configs/graph.yaml``
+and ``pangpang_pathfinder.route``. Prefer importing from there in new code.
+"""
+from __future__ import annotations
+
+from pangpang_pathfinder.config import load_graph_config
+from pangpang_pathfinder.route.graph import CampusGraph
+from pangpang_pathfinder.route.planner import Route, plan_route  # noqa: F401
+
+_GRAPH: CampusGraph | None = None
 
 
-def shortest_path(start: str, goal: str) -> list[str]:
-    """node 이름 두 개를 받아 경로(노드 이름 리스트) 반환.
-    Dummy: start, 중앙광장, goal 만 끼워 반환. 동일 노드면 [start] 반환."""
-    if start == goal:
-        return [start]
-    if "중앙광장" in (start, goal):
-        return [start, goal]
-    return [start, "중앙광장", goal]
+def get_graph() -> CampusGraph:
+    global _GRAPH
+    if _GRAPH is None:
+        _GRAPH = CampusGraph.from_config(load_graph_config())
+    return _GRAPH

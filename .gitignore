@@ -1,6 +1,8 @@
 __pycache__/
 *.py[cod]
 *.so
+*.egg-info/
+.playwright-mcp/
 .venv/
 venv/
 .env

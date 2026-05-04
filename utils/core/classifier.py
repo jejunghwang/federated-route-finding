@@ -1,27 +1,21 @@
-"""Dummy classifier — 추후 실제 모델로 교체."""
+"""Placeholder classifier used by the legacy ``utils/`` Gradio scaffold."""
+from __future__ import annotations
+
+import hashlib
+
 from PIL import Image
 
-NODE_NAMES = [
-    "정문",
-    "중앙광장",
-    "비마관 1층 로비",
-    "비마관 2층 복도",
-    "새빛관 로비",
-    "새빛관 4층 학과사무실",
-    "화도관 1층 입구",
-    "화도관 3층 강의실",
-    "옥의관 1층 입구",
-    "도서관 정문",
-    "기숙사 입구",
-    "아이스링크장 입구",
-]
+from .graph import get_graph
 
 
 def classify(image: Image.Image) -> tuple[str, float]:
-    """이미지를 받아 (node_name, confidence) 반환.
-    Dummy: NODE_NAMES 중 hash 기반으로 deterministic 선택."""
-    import hashlib
+    """Return ``(node_id, confidence)``.
+
+    Deterministic stand-in: hashes the image bytes and picks a node id from the
+    canonical graph. Real inference belongs in ``pangpang_pathfinder.models``.
+    """
+    node_ids = get_graph().node_ids
     h = int(hashlib.md5(image.tobytes()).hexdigest(), 16)
-    name = NODE_NAMES[h % len(NODE_NAMES)]
+    node_id = node_ids[h % len(node_ids)]
     conf = 0.7 + (h % 30) / 100  # 0.70 ~ 0.99
-    return name, round(conf, 2)
+    return node_id, round(conf, 2)

@@ -1,20 +1,19 @@
-"""Scene B — 길찾기 (신입생이 정문에서 출발). 사진 1장 + 목적지 드롭다운."""
+"""Scene B — 길찾기 탭 (사진 1장 + 목적지 드롭다운)."""
 import gradio as gr
 
-from core import NODE_NAMES
+from core import get_graph
 
 from .pipeline import run_pipeline
 
 
 def build_scene_b():
+    node_names = get_graph().node_names
     with gr.Row():
-        # 좌측: 입력
         with gr.Column():
             current_img = gr.Image(type="pil", label="현재 위치 사진")
-            goal_dd = gr.Dropdown(choices=NODE_NAMES, label="목적지")
+            goal_dd = gr.Dropdown(choices=node_names, label="목적지")
             run_btn = gr.Button("경로 찾기", variant="primary")
 
-        # 우측: 출력
         with gr.Column():
             result_md = gr.Markdown(label="분류 결과")
             path_md = gr.Markdown(label="경로")

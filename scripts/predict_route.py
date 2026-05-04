@@ -9,12 +9,15 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from pangpang_pathfinder.config import load_classes_map, load_yaml
+from pangpang_pathfinder.config import (
+    load_classes_map,
+    load_graph_config,
+)
 from pangpang_pathfinder.models.classifier import load_checkpoint
 from pangpang_pathfinder.models.factory import build_model
-from pangpang_pathfinder.route.graph import build_graph
+from pangpang_pathfinder.route.graph import CampusGraph, validate_classes_subset
 from pangpang_pathfinder.route.planner import plan_route
-from pangpang_pathfinder.route.stitching import stitch_clips_ffmpeg
+from pangpang_pathfinder.route.stitching import stitch_clips, stitch_clips_ffmpeg
 
 
 def infer_single_image(photo_path: str, checkpoint_path: str, model_name: str, class_to_idx: dict[str, int]) -> dict:
@@ -65,19 +68,28 @@ def main() -> None:
             raise ValueError("Provide --destination-class or --peer-photo")
         dst = args.destination_class
 
-    graph = build_graph(load_yaml(args.graph_config))
+    graph = CampusGraph.from_config(load_graph_config(args.graph_config))
+    validate_classes_subset(graph, list(class_to_idx.keys()))
+
     route = plan_route(graph, src, dst)
-    stitched, stitch_msg = stitch_clips_ffmpeg(route["clips"], "outputs/reports/stitched_route.mp4")
+    node_path = list(route.nodes)
+    edges = route.edges
+    stitched_clip = stitch_clips(edges) if edges else None
+    if stitched_clip:
+        Path("outputs/reports").mkdir(parents=True, exist_ok=True)
+        full_stitched, stitch_msg = stitch_clips_ffmpeg([stitched_clip], "outputs/reports/stitched_route.mp4")
+    else:
+        full_stitched, stitch_msg = None, "no clip available for the route"
 
     payload = {
         "predicted_class": src,
         "predicted_class_ko": classes_map.get(src, {}).get("display_name_ko", src),
         "destination_class": dst,
         "top3_predictions": current["top3"],
-        "node_path": route["node_path"],
-        "clip_list": route["clips"],
-        "missing_clips": route["missing_clips"],
-        "stitched_video_path": stitched,
+        "node_path": node_path,
+        "edge_count": len(edges),
+        "first_clip_path": stitched_clip,
+        "stitched_video_path": full_stitched,
         "stitch_status": stitch_msg,
     }
     print(json.dumps(payload, ensure_ascii=False, indent=2))
