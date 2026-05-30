@@ -1,0 +1,61 @@
+classes:
+  - slug: bima_2f_corridor
+    display_name_ko: 비마관 2층 복도
+    building: 비마관
+    description: 비마관 2층 주요 복도 구간
+  - slug: bima_101_front
+    display_name_ko: 비마관 101호 앞
+    building: 비마관
+    description: 비마관 101호 출입문 앞
+  - slug: bima_rooftop
+    display_name_ko: 비마관 옥상 출입구
+    building: 비마관
+    description: 비마관 옥상 계단 출입구
+  - slug: saebit_101_front
+    display_name_ko: 새빛관 101호 앞
+    building: 새빛관
+    description: 새빛관 1층 101호 앞
+  - slug: saebit_office
+    display_name_ko: 새빛관 학과사무실
+    building: 새빛관
+    description: 새빛관 학과사무실 앞
+  - slug: chambit_1f_corridor
+    display_name_ko: 참빛관 1층 복도
+    building: 참빛관
+    description: 참빛관 1층 중앙 복도
+  - slug: chambit_stairs_2f
+    display_name_ko: 참빛관 2층 계단 앞
+    building: 참빛관
+    description: 참빛관 2층 계단 연결부
+  - slug: centennial_2f_lobby
+    display_name_ko: 100주년기념관 2층 로비
+    building: 100주년기념관
+    description: 100주년기념관 2층 로비 중심
+  - slug: centennial_east_gate
+    display_name_ko: 100주년기념관 동문 연결로
+    building: 100주년기념관
+    description: 100주년기념관 동문 쪽 연결 통로
+  - slug: outdoor_basketball
+    display_name_ko: 외부 농구장
+    building: 외부
+    description: 캠퍼스 외부 농구장 코트
+  - slug: outdoor_central_plaza
+    display_name_ko: 중앙광장
+    building: 외부
+    description: 캠퍼스 중앙광장
+  - slug: hwado_1f_corridor
+    display_name_ko: 화도관 1층 복도
+    building: 화도관
+    description: 화도관 1층 복도
+  - slug: hwado_main_entrance
+    display_name_ko: 화도관 정문 앞
+    building: 화도관
+    description: 화도관 정문 계단 앞
+  - slug: okui_3f_corridor
+    display_name_ko: 옥의관 3층 복도
+    building: 옥의관
+    description: 옥의관 3층 복도
+  - slug: okui_elevator
+    display_name_ko: 옥의관 엘리베이터 앞
+    building: 옥의관
+    description: 옥의관 중앙 엘리베이터 홀

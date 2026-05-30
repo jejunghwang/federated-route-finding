@@ -1,0 +1,25 @@
+model:
+  name: resnet18
+  alternatives: [mobilenet_v3_small]
+  pretrained: false
+
+data:
+  image_size: 224
+  num_workers: 0
+  batch_size: 8
+  pin_memory: false
+  augment:
+    horizontal_flip: true
+    color_jitter: true
+
+training:
+  epochs: 5
+  lr: 0.001
+  weight_decay: 0.0001
+  seed: 42
+  device: cpu
+
+paths:
+  manifests_dir: data/manifests
+  checkpoints_dir: outputs/checkpoints
+  reports_dir: outputs/reports
