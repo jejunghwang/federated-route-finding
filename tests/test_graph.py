@@ -1,15 +1,15 @@
 import pytest
 
-from pangpang_pathfinder.config import (
+from pathfinder.config import (
     load_classes_map,
     load_graph_config,
 )
-from pangpang_pathfinder.route.graph import (
+from pathfinder.route.graph import (
     CampusGraph,
     Edge,
     validate_classes_subset,
 )
-from pangpang_pathfinder.route.planner import plan_route
+from pathfinder.route.planner import plan_route
 
 
 @pytest.fixture(scope="module")
@@ -18,35 +18,35 @@ def graph() -> CampusGraph:
 
 
 def test_graph_loads(graph):
-    assert len(graph.node_ids) >= 15
-    assert "bima_2f_corridor" in graph.node_ids
-    assert graph.get_node("bima_2f_corridor").name == "비마관 2층 복도"
+    assert len(graph.node_ids) == 8
+    assert "main_gate" in graph.node_ids
+    assert graph.get_node("main_gate").name == "정문"
 
 
 def test_self_path(graph):
-    r = plan_route(graph, "bima_2f_corridor", "bima_2f_corridor")
-    assert r.nodes == ["bima_2f_corridor"]
+    r = plan_route(graph, "main_gate", "main_gate")
+    assert r.nodes == ["main_gate"]
     assert r.edges == []
 
 
 def test_one_hop(graph):
-    r = plan_route(graph, "bima_2f_corridor", "bima_101_front")
-    assert r.nodes == ["bima_2f_corridor", "bima_101_front"]
-    assert r.edges == [Edge("bima_2f_corridor", "bima_101_front")]
+    r = plan_route(graph, "main_gate", "central_plaza")
+    assert r.nodes == ["main_gate", "central_plaza"]
+    assert r.edges == [Edge("main_gate", "central_plaza")]
 
 
 def test_multi_hop(graph):
-    r = plan_route(graph, "bima_101_front", "centennial_2f_lobby")
-    assert r.nodes[0] == "bima_101_front"
-    assert r.nodes[-1] == "centennial_2f_lobby"
-    assert r.hops >= 4
+    r = plan_route(graph, "main_gate", "saebit")
+    assert r.nodes[0] == "main_gate"
+    assert r.nodes[-1] == "saebit"
+    assert r.hops >= 3
     for e in r.edges:
         assert e.b in graph.neighbors(e.a)
 
 
 def test_unknown_node_raises(graph):
     with pytest.raises(ValueError):
-        plan_route(graph, "not_a_node", "bima_2f_corridor")
+        plan_route(graph, "not_a_node", "main_gate")
 
 
 def test_no_self_loops_in_config():

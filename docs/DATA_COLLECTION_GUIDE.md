@@ -6,7 +6,7 @@
 - Avoid blurry photos.
 
 ## Minimum recommendation
-- 3+ sessions/class/client.
+- 3+ sessions/class (session = 영상 1개).
 - 30+ images/session.
 
 ## Naming

@@ -51,11 +51,10 @@
 ├── configs/                # 클래스/클라이언트/학습/병합/그래프 설정
 ├── data/                   # raw/processed/manifests/route_clips
 ├── docs/                   # 아키텍처/데이터수집/팀워크플로우 + 마스코트 에셋
-├── scripts/                # 실행 스크립트 (정식 학습/평가/데모)
-├── src/pangpang_pathfinder # 라이브러리 코드 (route/, models/, fl/, engine/, ...)
+├── scripts/                # 실행 스크립트 (학습/평가/데모 진입점)
+├── src/pathfinder/         # 라이브러리 코드 (route/, models/, fl/, engine/, app/, ...)
 ├── tests/                  # 경량 CPU 테스트
 ├── outputs/                # 체크포인트/리포트 출력
-├── utils/                  # 임시 Gradio 데모 스캐폴드 (정식 모듈 wrapper)
 └── _docs/                  # 작업 일지 (history/<날짜>.md)
 ```
 
@@ -89,6 +88,13 @@ python -m pip install --upgrade pip
 pip install -e .[dev]
 ```
 
+또는 conda:
+
+```bash
+conda env create -f environment.yml
+conda activate pathfinder
+```
+
 ---
 
 ## 🚀 실행 커맨드 (README와 실제 파일 동기화)
@@ -118,18 +124,16 @@ python scripts/evaluate_global.py
 
 ### 5) 예측 + 경로 (CLI)
 ```bash
-python scripts/predict_route.py --current-photo path/to/current.jpg --destination-class bima_101_front
+python scripts/predict_route.py --current-photo path/to/current.jpg --destination-class saebit
 python scripts/predict_route.py --current-photo path/to/a.jpg --peer-photo path/to/b.jpg
 ```
 
 ### 6) Gradio 데모 실행
 ```bash
-# 정식 데모 (학습된 모델 + 정식 UI)
 python scripts/launch_demo.py
-
-# 또는 임시 데모 (dummy 분류기 + 동일 graph/planner 코어)
-python utils/app.py
 ```
+> checkpoint(`outputs/checkpoints/global_merged.pt`)가 있으면 학습된 모델로 추론하고,
+> 없으면 dummy 분류기로 동작합니다. 경로의 구간별로 있는 영상만 이어붙여 재생합니다.
 
 ---
 
@@ -148,47 +152,6 @@ python utils/app.py
 - 클래스/노드 확장
 - route clip 품질 개선 및 edge coverage 확대
 - 경량화 모델 최적화(모바일 고려)
-
----
-
-## 🔄 본 브랜치 주요 변경 (`codex/create-starter-repository-for-pangpang-pathfinder`)
-
-다른 사람이 만든 정식 구조 위에 **graph/route 코어 wiring**과 **임시 Gradio 데모(`utils/`)**를 추가하면서 정리한 사항.
-
-### 1. 그래프/최단경로 정식 구현 (Floyd-Warshall)
-
-`src/pangpang_pathfinder/route/` 정식 모듈:
-- `graph.py:CampusGraph` — `configs/graph.yaml` 로드 후 networkx 무방향 그래프 + **F-W all-pairs precompute** (`__init__`에서 1회).
-- `planner.py:plan_route` — `nx.reconstruct_path`로 precomputed predecessor 행렬 lookup. 시그니처는 BFS 시절과 동일.
-- 동일 unweighted 무방향 그래프에서 BFS와 결과 동일하지만, edge weight 도입/distance matrix 활용/발표 변별력에서 유리.
-
-자세한 patch 설명: `graph_shortest_path_spec_v2.md` 끝 섹션.
-
-### 2. `utils/` 임시 데모 — 정식 모듈 wrapper로 통일
-
-기존 `utils/`는 `NODE_NAMES = [...]` 같은 하드코딩 dummy였음. 다음과 같이 재작성:
-- `utils/core/graph.py` → `pangpang_pathfinder.route` 싱글톤 wrapper
-- `utils/core/classifier.py` → `graph.node_ids` 기반 deterministic hash dummy, 반환값을 **node_id**로 통일 (이름 아님)
-- `utils/core/stitcher.py` → 정식 stitcher에 **절대경로 주입** (cwd 의존 회피)
-- `utils/ui/scene_b.py` 드롭다운 → `graph.node_names` 자동 로드
-
-이래서 노드/엣지 추가는 **`configs/graph.yaml` 한 곳만** 편집하면 양쪽 데모 모두 자동 반영.
-
-### 3. 데이터 컨벤션 명시
-
-- `data/README.md`에 **route_clips 파일명 규칙** 섹션 추가 (`<from_id>__<to_id>.mp4`, double-underscore, 무방향이므로 한 방향만 둬도 OK).
-
-### 4. 폴더 정리
-
-- `*.egg-info/`, `.playwright-mcp/` `.gitignore` 추가
-- `utils/assets/`(빈 폴더), `__pycache__/` 청소
-- 빌드 산출물(`src/pangpang_pathfinder.egg-info/`) 제거
-
-### 5. 검증
-
-- `pytest tests/test_graph.py -v` → 7/7 통과
-- `python utils/app.py` → http://127.0.0.1:7860 정상 동작 (Playwright E2E로 4-hop 경로 확인)
-- `os.chdir('utils')` 상태에서도 `data/route_clips/` 절대경로 유지
 
 ---
 

@@ -1,6 +1,6 @@
 import torch
 
-from pangpang_pathfinder.models.classifier import build_classifier
+from pathfinder.models.classifier import build_classifier
 
 
 def test_resnet18_forward_shape():

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from pangpang_pathfinder.config import load_classes_map, load_yaml
-from pangpang_pathfinder.utils.io import ensure_dir
+from pathfinder.config import load_classes_map, load_yaml
+from pathfinder.utils.io import ensure_dir
 
 
 def split_sessions(sessions: list[str]) -> dict[str, set[str]]:
@@ -41,24 +41,21 @@ def main() -> None:
     rows = []
     sessions_per_class = defaultdict(set)
 
-    for client_dir in sorted(p for p in raw_dir.iterdir() if p.is_dir()):
-        client_id = client_dir.name
-        for class_dir in sorted(p for p in client_dir.iterdir() if p.is_dir()):
-            class_slug = class_dir.name
-            if class_slug not in class_map:
-                raise ValueError(f"Unknown class slug in raw data: {class_slug}")
-            for session_dir in sorted(p for p in class_dir.iterdir() if p.is_dir()):
-                session_name = session_dir.name
-                sessions_per_class[class_slug].add(session_name)
-                for img_path in sorted(session_dir.glob("*.jpg")):
-                    rows.append(
-                        {
-                            "client_id": client_id,
-                            "class_slug": class_slug,
-                            "session_name": session_name,
-                            "image_path": str(img_path),
-                        }
-                    )
+    for class_dir in sorted(p for p in raw_dir.iterdir() if p.is_dir()):
+        class_slug = class_dir.name
+        if class_slug not in class_map:
+            raise ValueError(f"Unknown class slug in raw data: {class_slug}")
+        for session_dir in sorted(p for p in class_dir.iterdir() if p.is_dir()):
+            session_name = session_dir.name
+            sessions_per_class[class_slug].add(session_name)
+            for img_path in sorted(session_dir.glob("*.jpg")):
+                rows.append(
+                    {
+                        "class_slug": class_slug,
+                        "session_name": session_name,
+                        "image_path": str(img_path),
+                    }
+                )
 
     if not rows:
         raise ValueError("No images found under data/raw")

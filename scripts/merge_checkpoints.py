@@ -5,9 +5,9 @@ from pathlib import Path
 
 import torch
 
-from pangpang_pathfinder.config import load_yaml
-from pangpang_pathfinder.fl.merge import merge_state_dicts
-from pangpang_pathfinder.utils.io import ensure_dir, save_json
+from pathfinder.config import load_yaml
+from pathfinder.fl.merge import merge_state_dicts
+from pathfinder.utils.io import ensure_dir, save_json
 
 
 def main() -> None:

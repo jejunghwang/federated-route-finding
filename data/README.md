@@ -1,22 +1,23 @@
 # Data layout
 
-Raw images must follow this exact structure:
+Raw images must follow this exact structure (데이터셋은 고정 — 사람별로 나누지 않음):
 
 ```text
-data/raw/<client_id>/<class_slug>/<session_name>/*.jpg
+data/raw/<class_slug>/<session_name>/*.jpg
 ```
 
 Example:
 
 ```text
-data/raw/hwang/bima_2f_corridor/session_01/img001.jpg
+data/raw/main_gate/session_01/img001.jpg
 ```
 
 ## Rules
-- `client_id` must exist in `configs/clients.yaml`.
-- `class_slug` must exist in `configs/classes.yaml`.
+- `class_slug` must exist in `configs/classes.yaml` (= graph node id).
 - `session_name` is used for leak-free split (train/val/test split is by session).
 - Keep at least 3 sessions per class for stable split.
+- 연합학습 분할은 데이터 폴더가 아니라 학습 시점에 `configs/clients.yaml`의
+  담당 노드(class)로 이뤄진다. `train_local.py --client-id`가 공유 풀에서 해당 노드만 골라 학습.
 
 ## Outputs
 - `data/manifests/train.csv`
@@ -24,7 +25,7 @@ data/raw/hwang/bima_2f_corridor/session_01/img001.jpg
 - `data/manifests/test.csv`
 
 Each CSV stores one row per image with columns:
-`client_id, class_slug, session_name, image_path, split`
+`class_slug, session_name, image_path, split`
 
 ## Route clips
 

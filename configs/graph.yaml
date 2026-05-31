@@ -1,79 +1,52 @@
 version: 1
 
 # Campus graph — 노드/엣지 단일 소스. 추가/수정은 이 파일만 편집.
+# 광운대 캠퍼스 실제 8개 노드 (큰 장소). 실내 세부는 분류 대상이 아니라
+# 데모 재생 단계에서 route_clips/indoor/ 영상으로 이어 붙인다.
 nodes:
-  - id: bima_2f_corridor
-    name: 비마관 2층 복도
-    building: 비마관
-    is_indoor: true
-  - id: bima_101_front
-    name: 비마관 101호 앞
-    building: 비마관
-    is_indoor: true
-  - id: bima_rooftop
-    name: 비마관 옥상 출입구
-    building: 비마관
-    is_indoor: false
-  - id: saebit_101_front
-    name: 새빛관 101호 앞
-    building: 새빛관
-    is_indoor: true
-  - id: saebit_office
-    name: 새빛관 학과사무실
-    building: 새빛관
-    is_indoor: true
-  - id: chambit_1f_corridor
-    name: 참빛관 1층 복도
-    building: 참빛관
-    is_indoor: true
-  - id: chambit_stairs_2f
-    name: 참빛관 2층 계단 앞
-    building: 참빛관
-    is_indoor: true
-  - id: centennial_2f_lobby
-    name: 100주년기념관 2층 로비
-    building: 100주년기념관
-    is_indoor: true
-  - id: centennial_east_gate
-    name: 100주년기념관 동문 연결로
-    building: 100주년기념관
-    is_indoor: true
-  - id: outdoor_basketball
-    name: 외부 농구장
+  - id: main_gate
+    name: 정문
     building: 외부
     is_indoor: false
-  - id: outdoor_central_plaza
+  - id: central_plaza
     name: 중앙광장
     building: 외부
     is_indoor: false
-  - id: hwado_1f_corridor
-    name: 화도관 1층 복도
-    building: 화도관
-    is_indoor: true
-  - id: hwado_main_entrance
-    name: 화도관 정문 앞
-    building: 화도관
+  - id: central_library
+    name: 중앙도서관
+    building: 중앙도서관
     is_indoor: false
-  - id: okui_3f_corridor
-    name: 옥의관 3층 복도
-    building: 옥의관
-    is_indoor: true
-  - id: okui_elevator
-    name: 옥의관 엘리베이터 앞
-    building: 옥의관
-    is_indoor: true
+  - id: fountain
+    name: 분수대
+    building: 외부
+    is_indoor: false
+  - id: outdoor_court
+    name: 노천극장/농구장
+    building: 외부
+    is_indoor: false
+  - id: saebit
+    name: 새빛관
+    building: 새빛관
+    is_indoor: false
+  - id: chambit
+    name: 참빛관
+    building: 참빛관
+    is_indoor: false
+  - id: bima_smoking
+    name: 비마관흡연장
+    building: 비마관
+    is_indoor: false
 
 # edges: 무방향. 한 번만 적으면 양방향으로 펼쳐짐.
 edges:
-  - [bima_2f_corridor, bima_101_front]
-  - [bima_2f_corridor, bima_rooftop]
-  - [bima_2f_corridor, chambit_1f_corridor]
-  - [bima_2f_corridor, outdoor_central_plaza]
-  - [chambit_1f_corridor, chambit_stairs_2f]
-  - [centennial_2f_lobby, centennial_east_gate]
-  - [centennial_east_gate, outdoor_central_plaza]
-  - [outdoor_central_plaza, outdoor_basketball]
-  - [outdoor_central_plaza, hwado_main_entrance]
-  - [hwado_1f_corridor, hwado_main_entrance]
-  - [saebit_101_front, saebit_office]
-  - [okui_3f_corridor, okui_elevator]
+  - [main_gate, central_plaza]
+  - [main_gate, central_library]
+  - [central_plaza, central_library]
+  - [central_plaza, bima_smoking]
+  - [central_plaza, fountain]
+  - [fountain, central_library]
+  - [fountain, outdoor_court]
+  - [fountain, saebit]
+  - [outdoor_court, saebit]
+  - [saebit, chambit]
+  - [chambit, bima_smoking]

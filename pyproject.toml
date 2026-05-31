@@ -12,8 +12,8 @@ authors = [{ name = "PangPang Team" }]
 dependencies = [
   "torch>=2.1",
   "torchvision>=0.16",
+  "Pillow>=10.0",
   "networkx>=3.0",
-  "opencv-python>=4.8",
   "gradio>=4.0",
   "pyyaml>=6.0",
   "numpy>=1.24",

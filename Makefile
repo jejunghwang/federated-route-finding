@@ -18,7 +18,7 @@ evaluate:
 	$(PYTHON) scripts/evaluate_global.py
 
 predict:
-	$(PYTHON) scripts/predict_route.py --current-photo sample.jpg --destination-class bima_101_front
+	$(PYTHON) scripts/predict_route.py --current-photo sample.jpg --destination-class saebit
 
 demo:
 	$(PYTHON) scripts/launch_demo.py

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from pangpang_pathfinder.app.gradio_app import create_app
+from pathfinder.app.gradio_app import create_app
 
 
 if __name__ == "__main__":

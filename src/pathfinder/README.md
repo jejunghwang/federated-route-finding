@@ -1,13 +1,12 @@
-# pangpang_pathfinder — 라이브러리 코드
+# pathfinder — 라이브러리 코드
 
 PangPang PathFinder의 정식 패키지. CLI 스크립트(`scripts/`)와 Gradio 앱들이 모두 여기서 import.
 
 ## 패키지 트리
 
 ```
-pangpang_pathfinder/
+pathfinder/
 ├── config.py            # YAML 로더 (load_graph_config, load_classes_map, load_yaml)
-├── constants.py         # PROJECT_ROOT, CONFIG_DIR, DATA_DIR, OUTPUT_DIR
 │
 ├── route/               # 그래프 + 최단경로 (Floyd-Warshall)
 │   ├── graph.py         # CampusGraph (F-W precompute), Node/Edge dataclass, validate_classes_subset
@@ -35,7 +34,7 @@ pangpang_pathfinder/
 ├── app/                 # 정식 Gradio 앱
 │   └── gradio_app.py    # 신입생 길찾기 / A→B 만남 두 탭
 │
-└── utils/               # 헬퍼 (io, logging, paths, reproducibility)
+└── utils/               # 헬퍼 (io, logging, reproducibility)
 ```
 
 ## 주요 진입점
@@ -49,7 +48,6 @@ scripts/merge_checkpoints.py      fl.merge, models.classifier
 scripts/evaluate_global.py        engine.evaluate, models.classifier
 scripts/predict_route.py          models.classifier, route.planner, route.stitching
 scripts/launch_demo.py            app.gradio_app:create_app
-utils/core/* (legacy)             route.graph, route.planner, route.stitching (thin wrapper)
 ```
 
 ## 모듈별 상세 README

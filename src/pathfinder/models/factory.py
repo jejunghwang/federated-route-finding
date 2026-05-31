@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pangpang_pathfinder.models.classifier import build_classifier
+from pathfinder.models.classifier import build_classifier
 
 
 def build_model(train_cfg: dict, num_classes: int):

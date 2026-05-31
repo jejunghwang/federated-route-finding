@@ -5,42 +5,15 @@ import argparse
 import json
 from pathlib import Path
 
-import torch
-from PIL import Image
-from torchvision import transforms
-
-from pangpang_pathfinder.config import (
+from pathfinder.config import (
     load_classes_map,
     load_graph_config,
 )
-from pangpang_pathfinder.models.classifier import load_checkpoint
-from pangpang_pathfinder.models.factory import build_model
-from pangpang_pathfinder.route.graph import CampusGraph, validate_classes_subset
-from pangpang_pathfinder.route.planner import plan_route
-from pangpang_pathfinder.route.stitching import stitch_clips, stitch_clips_ffmpeg
-
-
-def infer_single_image(photo_path: str, checkpoint_path: str, model_name: str, class_to_idx: dict[str, int]) -> dict:
-    idx_to_class = {v: k for k, v in class_to_idx.items()}
-    model = build_model({"model": {"name": model_name, "pretrained": False}}, len(class_to_idx))
-    ckpt = load_checkpoint(checkpoint_path)
-    model.load_state_dict(ckpt["model_state_dict"], strict=True)
-    model.eval()
-
-    tfm = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-    image = Image.open(photo_path).convert("RGB")
-    x = tfm(image).unsqueeze(0)
-
-    with torch.no_grad():
-        probs = torch.softmax(model(x), dim=1)
-        values, indices = torch.topk(probs, k=min(3, probs.shape[1]), dim=1)
-
-    top3 = [(idx_to_class[i], float(v)) for i, v in zip(indices[0].tolist(), values[0].tolist())]
-    return {
-        "predicted_class": top3[0][0],
-        "top3": top3,
-        "top3_text": "\n".join([f"{slug}: {score:.3f}" for slug, score in top3]),
-    }
+from pathfinder.inference import infer_single_image
+from pathfinder.models.classifier import load_checkpoint
+from pathfinder.route.graph import CampusGraph, validate_classes_subset
+from pathfinder.route.planner import plan_route
+from pathfinder.route.stitching import stitch_clips
 
 
 def main() -> None:
@@ -74,10 +47,10 @@ def main() -> None:
     route = plan_route(graph, src, dst)
     node_path = list(route.nodes)
     edges = route.edges
-    stitched_clip = stitch_clips(edges) if edges else None
-    if stitched_clip:
+    if edges:
         Path("outputs/reports").mkdir(parents=True, exist_ok=True)
-        full_stitched, stitch_msg = stitch_clips_ffmpeg([stitched_clip], "outputs/reports/stitched_route.mp4")
+        full_stitched = stitch_clips(edges, output_path="outputs/reports/stitched_route.mp4")
+        stitch_msg = "stitched" if full_stitched else "no clip available for the route"
     else:
         full_stitched, stitch_msg = None, "no clip available for the route"
 
@@ -88,7 +61,6 @@ def main() -> None:
         "top3_predictions": current["top3"],
         "node_path": node_path,
         "edge_count": len(edges),
-        "first_clip_path": stitched_clip,
         "stitched_video_path": full_stitched,
         "stitch_status": stitch_msg,
     }

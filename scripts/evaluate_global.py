@@ -7,13 +7,13 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-from pangpang_pathfinder.config import load_classes_map, load_yaml
-from pangpang_pathfinder.data.dataset import ManifestImageDataset
-from pangpang_pathfinder.data.transforms import build_transforms
-from pangpang_pathfinder.engine.metrics import compute_metrics
-from pangpang_pathfinder.models.classifier import load_checkpoint
-from pangpang_pathfinder.models.factory import build_model
-from pangpang_pathfinder.utils.io import save_json
+from pathfinder.config import load_classes_map, load_yaml
+from pathfinder.data.dataset import ManifestImageDataset
+from pathfinder.data.transforms import build_transforms
+from pathfinder.engine.metrics import compute_metrics
+from pathfinder.models.classifier import load_checkpoint
+from pathfinder.models.factory import build_model
+from pathfinder.utils.io import save_json
 
 
 def main() -> None:

@@ -11,16 +11,16 @@ from torch import nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from pangpang_pathfinder.config import load_classes_map, load_yaml
-from pangpang_pathfinder.data.dataset import ManifestImageDataset
-from pangpang_pathfinder.data.transforms import build_transforms
-from pangpang_pathfinder.engine.metrics import compute_metrics
-from pangpang_pathfinder.engine.train import run_epoch
-from pangpang_pathfinder.models.classifier import save_checkpoint
-from pangpang_pathfinder.models.factory import build_model
-from pangpang_pathfinder.utils.io import ensure_dir, save_json
-from pangpang_pathfinder.utils.logging import console
-from pangpang_pathfinder.utils.reproducibility import set_seed
+from pathfinder.config import load_classes_map, load_yaml
+from pathfinder.data.dataset import ManifestImageDataset
+from pathfinder.data.transforms import build_transforms
+from pathfinder.engine.metrics import compute_metrics
+from pathfinder.engine.train import run_epoch
+from pathfinder.models.classifier import save_checkpoint
+from pathfinder.models.factory import build_model
+from pathfinder.utils.io import ensure_dir, save_json
+from pathfinder.utils.logging import console
+from pathfinder.utils.reproducibility import set_seed
 
 
 def main() -> None:
