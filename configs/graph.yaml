@@ -47,6 +47,7 @@ edges:
   - [fountain, outdoor_court]
   - [fountain, saebit]
   - [fountain, bima_smoking]
+  - [fountain, chambit]
   - [outdoor_court, saebit]
   - [saebit, chambit]
   - [chambit, bima_smoking]

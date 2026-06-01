@@ -12,11 +12,15 @@ from pathfinder.config import (
 from pathfinder.route.graph import CampusGraph, validate_classes_subset
 from pathfinder.route.planner import Route, plan_route
 from pathfinder.app.simple_demo import (
+    INDOOR_TARGETS,
     PROCESSED_OUTPUT,
     _build_dest_choices,
     _resolve_indoor_chain,
     _stitch_with_filter,
 )
+
+INDOOR_TO_OUTDOOR: dict[str, str] = {indoor: outdoor for outdoor, indoor, _ in INDOOR_TARGETS}
+INDOOR_DISPLAY_NAME: dict[str, str] = {indoor: name for _, indoor, name in INDOOR_TARGETS}
 from pathfinder.route.stitching import resolve_clips
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -108,8 +112,14 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
         goal_outdoor = meta["outdoor"]
         indoor_slug = meta["indoor"]
 
-        route = plan_route(graph, cur_id, goal_outdoor)
-        cur_name = graph.get_node(cur_id).name
+        cur_outdoor = INDOOR_TO_OUTDOOR.get(cur_id, cur_id)
+        cur_indoor_name = INDOOR_DISPLAY_NAME.get(cur_id)
+        cur_outdoor_name = graph.get_node(cur_outdoor).name
+        cur_name = (
+            f"{cur_outdoor_name} · {cur_indoor_name}" if cur_indoor_name else cur_outdoor_name
+        )
+
+        route = plan_route(graph, cur_outdoor, goal_outdoor)
 
         indoor_clips: list[Path] = []
         indoor_display = None
@@ -133,9 +143,11 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
 
         cur_id, cur_conf, top3_text = _predict(current_photo)
         peer_id, peer_conf, _ = _predict(peer_photo)
-        route = plan_route(graph, cur_id, peer_id)
-        cur_name = graph.get_node(cur_id).name
-        peer_name = graph.get_node(peer_id).name
+        cur_outdoor = INDOOR_TO_OUTDOOR.get(cur_id, cur_id)
+        peer_outdoor = INDOOR_TO_OUTDOOR.get(peer_id, peer_id)
+        route = plan_route(graph, cur_outdoor, peer_outdoor)
+        cur_name = graph.get_node(cur_outdoor).name
+        peer_name = graph.get_node(peer_outdoor).name
         path_md, video = _build_route_output(graph, route)
 
         return (

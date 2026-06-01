@@ -8,6 +8,12 @@ from .graph import Edge
 
 ROUTE_CLIPS_DIR = Path("data/route_clips")
 
+# 영상이 없는 엣지를 다른 엣지의 영상으로 대체하는 별칭 매핑.
+# 방향 무관: (a, b) 키는 양방향 모두 적용.
+EDGE_CLIP_ALIASES: dict[tuple[str, str], tuple[str, str]] = {
+    ("fountain", "central_library"): ("fountain", "central_plaza"),
+}
+
 
 def _resolve_clip_for_edge(edge: Edge, clips_dir: Path = ROUTE_CLIPS_DIR) -> Path | None:
     forward = clips_dir / f"{edge.a}__{edge.b}.mp4"
@@ -16,6 +22,15 @@ def _resolve_clip_for_edge(edge: Edge, clips_dir: Path = ROUTE_CLIPS_DIR) -> Pat
         return forward
     if backward.exists():
         return backward
+    alias = EDGE_CLIP_ALIASES.get((edge.a, edge.b)) or EDGE_CLIP_ALIASES.get((edge.b, edge.a))
+    if alias is not None:
+        a, b = alias
+        af = clips_dir / f"{a}__{b}.mp4"
+        ab = clips_dir / f"{b}__{a}.mp4"
+        if af.exists():
+            return af
+        if ab.exists():
+            return ab
     return None
 
 
