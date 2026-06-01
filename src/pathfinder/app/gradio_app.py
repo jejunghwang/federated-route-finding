@@ -11,7 +11,12 @@ from pathfinder.config import (
 )
 from pathfinder.route.graph import CampusGraph, validate_classes_subset
 from pathfinder.route.planner import Route, plan_route
-from pathfinder.app.simple_demo import PROCESSED_OUTPUT, _stitch_with_filter
+from pathfinder.app.simple_demo import (
+    PROCESSED_OUTPUT,
+    _build_dest_choices,
+    _resolve_indoor_clip,
+    _stitch_with_filter,
+)
 from pathfinder.route.stitching import resolve_clips
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -31,16 +36,30 @@ def _predict_node_id_dummy(graph: CampusGraph, photo_path: str) -> tuple[str, fl
     return node_id, round(conf, 2)
 
 
-def _build_route_output(graph: CampusGraph, route: Route) -> tuple[str, str | None]:
+def _build_route_output(
+    graph: CampusGraph,
+    route: Route,
+    indoor_clip: Path | None = None,
+    indoor_display: str | None = None,
+) -> tuple[str, str | None]:
     """경로를 (안내 markdown, 합쳐진 영상 경로)로 변환.
 
     영상은 concat filter로 해상도/fps 정규화 후 음소거 + 4배속 재인코딩.
+    indoor_clip이 주어지면 마지막에 실내 영상을 추가하고 경로 라인에 도착 실내명을 표시.
     """
-    if route.is_empty:
+    if route.is_empty and indoor_clip is None:
         return "**경로 없음** — 두 노드가 연결되어 있지 않습니다.", None
 
-    node_line = " → ".join(graph.get_node(i).name for i in route.nodes)
+    if route.is_empty and indoor_clip is not None:
+        node_line = indoor_display or "(실내)"
+    else:
+        node_line = " → ".join(graph.get_node(i).name for i in route.nodes)
+        if indoor_display:
+            node_line += f" → {indoor_display}"
+
     clip_paths, _missing = resolve_clips(route.edges, ROUTE_CLIPS_DIR)
+    if indoor_clip is not None:
+        clip_paths.append(str(indoor_clip))
     video = _stitch_with_filter(clip_paths, PROCESSED_OUTPUT, speed_x=4.0)
     path_md = f"**경로** (음소거 · 4배속)\n\n{node_line}"
     return path_md, video
@@ -72,17 +91,33 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
         node_id, conf = _predict_node_id_dummy(graph, photo_path)
         return node_id, conf, f"{node_id}: {conf:.3f} (dummy — checkpoint 없음)"
 
-    def newbie_route(current_photo, destination_name):
+    node_names_by_id = {nid: graph.get_node(nid).name for nid in graph.node_ids}
+    dest_choices, label_meta = _build_dest_choices(node_names_by_id)
+
+    def newbie_route(current_photo, dest_label):
         if current_photo is None:
             return "현재 위치 사진을 업로드해주세요.", "", "", "", None
-        if not destination_name:
+        if not dest_label:
             return "목적지를 선택해주세요.", "", "", "", None
 
+        meta = label_meta.get(dest_label)
+        if meta is None:
+            return f"목적지 라벨을 찾을 수 없습니다: {dest_label}", "", "", "", None
+
         cur_id, cur_conf, top3_text = _predict(current_photo)
-        goal_id = graph.id_by_name(destination_name)
-        route = plan_route(graph, cur_id, goal_id)
+        goal_outdoor = meta["outdoor"]
+        indoor_slug = meta["indoor"]
+
+        route = plan_route(graph, cur_id, goal_outdoor)
         cur_name = graph.get_node(cur_id).name
-        path_md, video = _build_route_output(graph, route)
+
+        indoor_clip = None
+        indoor_display = None
+        if indoor_slug is not None:
+            indoor_clip = _resolve_indoor_clip(goal_outdoor, indoor_slug)
+            indoor_display = dest_label.strip(" └")
+
+        path_md, video = _build_route_output(graph, route, indoor_clip, indoor_display)
 
         return (
             top3_text,
@@ -115,7 +150,7 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
         gr.Markdown("# Campus PathFinder\n사진 기반 캠퍼스 길찾기 데모")
         with gr.Tab("신입생 길찾기"):
             cur = gr.Image(type="filepath", label="현재 위치 사진")
-            dst = gr.Dropdown(choices=graph.node_names, label="목적지")
+            dst = gr.Dropdown(choices=dest_choices, label="목적지 (야외 + 실내)")
             btn = gr.Button("길 안내 시작")
             top3 = gr.Textbox(label="Top-3 예측")
             pred = gr.Textbox(label="예측 위치")
