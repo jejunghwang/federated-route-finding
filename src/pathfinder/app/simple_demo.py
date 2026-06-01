@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import shutil
 import subprocess
 from pathlib import Path
@@ -40,18 +41,55 @@ INDOOR_TARGETS: list[tuple[str, str, str]] = [
 ]
 
 
-def _resolve_indoor_clip(outdoor_slug: str, indoor_slug: str) -> Path | None:
-    short = indoor_slug.removeprefix(f"{outdoor_slug}_")
-    candidates = [
-        ROUTE_CLIPS_DIR / f"{outdoor_slug}__{indoor_slug}.mp4",
-        ROUTE_CLIPS_DIR / f"{outdoor_slug}__{short}.mp4",
-        ROUTE_CLIPS_DIR / "indoor" / f"{outdoor_slug}__{indoor_slug}.mp4",
-        ROUTE_CLIPS_DIR / "indoor" / f"{outdoor_slug}__{short}.mp4",
-    ]
-    for p in candidates:
+# (outdoor, indoor) → 그 위치로 가기 위해 순서대로 재생할 영상 파일명(.mp4 생략)
+# 영상은 route_clips 또는 route_clips/indoor 안에서 탐색됨.
+INDOOR_CHAINS: dict[tuple[str, str], list[str]] = {
+    ("saebit", "saebit_1f"): ["saebit__1f"],
+    ("saebit", "saebit_2f"): ["saebit_1f__2f"],
+    ("saebit", "saebit_3f"): ["saebit_1f__3f"],
+    ("saebit", "saebit_8f"): ["saebit_1f__8f"],
+    ("saebit", "saebit_elevator"): ["saebit_1f__elevator"],
+    ("chambit", "chambit_1f_clock"): ["chambit__chambit_1f_clock"],
+    ("chambit", "chambit_b101"): ["chambit__chambit_b101"],
+    ("chambit", "chambit_3f_garden"): [
+        "chambit__chambit_1f_clock",
+        "chambit_1f_clock__chambit_3f_garden",
+    ],
+    ("central_library", "central_library_freeroom_3"): ["main_gate__central_library_freeroom_3"],
+    ("central_library", "central_library_jiphyeonjeon"): ["main_gate__central_library_jiphyeonjeon"],
+    ("central_library", "central_library_301_front"): ["main_gate__central_library_301_front"],
+    ("central_library", "central_library_301_back"): ["main_gate__central_library_301_back"],
+    ("central_library", "central_library_freeroom_1"): [
+        "main_gate__central_library_jiphyeonjeon",
+        "central_library_jiphyeonjeon__central_library_freeroom_1",
+    ],
+}
+
+
+def _find_clip(name: str) -> Path | None:
+    for folder in (ROUTE_CLIPS_DIR, ROUTE_CLIPS_DIR / "indoor"):
+        p = folder / f"{name}.mp4"
         if p.exists():
             return p
     return None
+
+
+def _resolve_indoor_chain(outdoor_slug: str, indoor_slug: str) -> list[Path]:
+    chain = INDOOR_CHAINS.get((outdoor_slug, indoor_slug))
+    if chain is not None:
+        return [p for name in chain if (p := _find_clip(name)) is not None]
+    short = indoor_slug.removeprefix(f"{outdoor_slug}_")
+    for name in (f"{outdoor_slug}__{indoor_slug}", f"{outdoor_slug}__{short}"):
+        p = _find_clip(name)
+        if p is not None:
+            return [p]
+    return []
+
+
+def _resolve_indoor_clip(outdoor_slug: str, indoor_slug: str) -> Path | None:
+    """단일 클립 호환 헬퍼 — chain의 마지막 영상을 반환 (있으면)."""
+    chain = _resolve_indoor_chain(outdoor_slug, indoor_slug)
+    return chain[-1] if chain else None
 
 
 def _build_dest_choices(node_names_by_id: dict[str, str]) -> tuple[list[str], dict[str, dict]]:
@@ -77,17 +115,26 @@ def _build_dest_choices(node_names_by_id: dict[str, str]) -> tuple[list[str], di
     return choices, label_meta
 
 
+def _cache_key(clips: list[str], speed_x: float, target_w: int, target_h: int, target_fps: int) -> str:
+    h = hashlib.md5()
+    for c in clips:
+        h.update(str(c).encode("utf-8"))
+        h.update(b"|")
+    h.update(f"{speed_x}_{target_w}_{target_h}_{target_fps}".encode())
+    return h.hexdigest()[:12]
+
+
 def _stitch_with_filter(
     clips: list[str],
     output_path: Path,
-    speed_x: float = 2.0,
-    target_w: int = 1280,
-    target_h: int = 720,
+    speed_x: float = 4.0,
+    target_w: int = 854,
+    target_h: int = 480,
     target_fps: int = 30,
 ) -> str | None:
     """concat filter로 해상도/fps 정규화하면서 한 번에 합치고 mute + 가속 적용.
 
-    `-c copy` 방식과 달리 모든 클립을 재인코딩하므로 해상도/코덱이 달라도 끊김 없이 이어붙임.
+    같은 (clips, speed_x, 해상도, fps) 조합은 hash 기반 캐시 파일로 즉시 반환.
     """
     if not clips:
         return None
@@ -95,7 +142,12 @@ def _stitch_with_filter(
         return clips[0] if clips else None
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    cmd: list[str] = ["ffmpeg", "-y"]
+    key = _cache_key(clips, speed_x, target_w, target_h, target_fps)
+    cached = output_path.parent / f"{output_path.stem}_{key}{output_path.suffix}"
+    if cached.exists():
+        return str(cached)
+
+    cmd: list[str] = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error"]
     for c in clips:
         cmd += ["-i", str(c)]
 
@@ -120,36 +172,37 @@ def _stitch_with_filter(
         "-map", map_label,
         "-an",
         "-c:v", "libx264",
-        "-preset", "veryfast",
-        "-crf", "23",
+        "-preset", "ultrafast",
+        "-tune", "fastdecode",
+        "-crf", "28",
         "-pix_fmt", "yuv420p",
+        "-threads", "0",
         "-movflags", "+faststart",
-        str(output_path),
+        str(cached),
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print("[stitch] ffmpeg 실패:", result.stderr[-600:])
         return clips[0]
-    return str(output_path)
+    return str(cached)
 
 
 def _build_route_output(
     graph: CampusGraph,
     route: Route,
-    indoor_clip: Path | None,
+    indoor_clips: list[Path],
     indoor_display: str | None,
 ) -> tuple[str, str | None]:
-    if route.is_empty and indoor_clip is None:
+    if route.is_empty and not indoor_clips:
         return "**경로 없음** — 연결되어 있지 않습니다.", None
 
-    if route.is_empty and indoor_clip is not None:
+    seg_lines: list[str] = []
+    if route.is_empty:
         node_line = indoor_display or "(실내)"
-        seg_lines = [f"1. {indoor_display} — ▶ 실내 영상 (`{indoor_clip.name}`)"]
     else:
         node_line = " → ".join(graph.get_node(i).name for i in route.nodes)
         if indoor_display:
             node_line += f" → {indoor_display}"
-        seg_lines = []
         for idx, edge in enumerate(route.edges, 1):
             a = graph.get_node(edge.a).name
             b = graph.get_node(edge.b).name
@@ -158,14 +211,13 @@ def _build_route_output(
                 seg_lines.append(f"{idx}. {a} → {b} — ▶ `{clip.name}`")
             else:
                 seg_lines.append(f"{idx}. {a} → {b} — ⚠ 영상 없음 (건너뜀)")
-        if indoor_clip is not None:
-            seg_lines.append(
-                f"{len(route.edges) + 1}. → {indoor_display} (실내) — ▶ `{indoor_clip.name}`"
-            )
+
+    offset = len(route.edges)
+    for j, ic in enumerate(indoor_clips, 1):
+        seg_lines.append(f"{offset + j}. (실내) — ▶ `{ic.name}`")
 
     clip_paths, _missing = resolve_clips(route.edges, ROUTE_CLIPS_DIR)
-    if indoor_clip is not None:
-        clip_paths.append(str(indoor_clip))
+    clip_paths.extend(str(p) for p in indoor_clips)
     video = _stitch_with_filter(clip_paths, PROCESSED_OUTPUT, speed_x=4.0)
     path_md = (
         f"**경로**\n\n{node_line}\n\n"
@@ -194,19 +246,19 @@ def create_simple_app():
         indoor_slug = meta["indoor"]
 
         route = plan_route(graph, start_id, goal_outdoor)
-        indoor_clip = None
+        indoor_clips: list[Path] = []
         indoor_display = None
         if indoor_slug is not None:
-            indoor_clip = _resolve_indoor_clip(goal_outdoor, indoor_slug)
+            indoor_clips = _resolve_indoor_chain(goal_outdoor, indoor_slug)
             indoor_display = dest_label.strip(" └")
 
-        return _build_route_output(graph, route, indoor_clip, indoor_display)
+        return _build_route_output(graph, route, indoor_clips, indoor_display)
 
     def find_peer(a_name: str, b_name: str):
         if not a_name or not b_name:
             return "A와 B 위치를 모두 선택해 주세요.", None
         route = plan_route(graph, graph.id_by_name(a_name), graph.id_by_name(b_name))
-        return _build_route_output(graph, route, None, None)
+        return _build_route_output(graph, route, [], None)
 
     with gr.Blocks(title="Campus PathFinder (Simple)") as demo:
         gr.Markdown(

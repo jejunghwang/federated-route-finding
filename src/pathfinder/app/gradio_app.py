@@ -14,7 +14,7 @@ from pathfinder.route.planner import Route, plan_route
 from pathfinder.app.simple_demo import (
     PROCESSED_OUTPUT,
     _build_dest_choices,
-    _resolve_indoor_clip,
+    _resolve_indoor_chain,
     _stitch_with_filter,
 )
 from pathfinder.route.stitching import resolve_clips
@@ -39,18 +39,19 @@ def _predict_node_id_dummy(graph: CampusGraph, photo_path: str) -> tuple[str, fl
 def _build_route_output(
     graph: CampusGraph,
     route: Route,
-    indoor_clip: Path | None = None,
+    indoor_clips: list[Path] | None = None,
     indoor_display: str | None = None,
 ) -> tuple[str, str | None]:
     """경로를 (안내 markdown, 합쳐진 영상 경로)로 변환.
 
     영상은 concat filter로 해상도/fps 정규화 후 음소거 + 4배속 재인코딩.
-    indoor_clip이 주어지면 마지막에 실내 영상을 추가하고 경로 라인에 도착 실내명을 표시.
+    indoor_clips가 있으면 outdoor 경로 영상 뒤에 순서대로 이어붙임.
     """
-    if route.is_empty and indoor_clip is None:
+    indoor_clips = indoor_clips or []
+    if route.is_empty and not indoor_clips:
         return "**경로 없음** — 두 노드가 연결되어 있지 않습니다.", None
 
-    if route.is_empty and indoor_clip is not None:
+    if route.is_empty:
         node_line = indoor_display or "(실내)"
     else:
         node_line = " → ".join(graph.get_node(i).name for i in route.nodes)
@@ -58,8 +59,7 @@ def _build_route_output(
             node_line += f" → {indoor_display}"
 
     clip_paths, _missing = resolve_clips(route.edges, ROUTE_CLIPS_DIR)
-    if indoor_clip is not None:
-        clip_paths.append(str(indoor_clip))
+    clip_paths.extend(str(p) for p in indoor_clips)
     video = _stitch_with_filter(clip_paths, PROCESSED_OUTPUT, speed_x=4.0)
     path_md = f"**경로** (음소거 · 4배속)\n\n{node_line}"
     return path_md, video
@@ -111,13 +111,13 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
         route = plan_route(graph, cur_id, goal_outdoor)
         cur_name = graph.get_node(cur_id).name
 
-        indoor_clip = None
+        indoor_clips: list[Path] = []
         indoor_display = None
         if indoor_slug is not None:
-            indoor_clip = _resolve_indoor_clip(goal_outdoor, indoor_slug)
+            indoor_clips = _resolve_indoor_chain(goal_outdoor, indoor_slug)
             indoor_display = dest_label.strip(" └")
 
-        path_md, video = _build_route_output(graph, route, indoor_clip, indoor_display)
+        path_md, video = _build_route_output(graph, route, indoor_clips, indoor_display)
 
         return (
             top3_text,
