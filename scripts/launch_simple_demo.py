@@ -4,9 +4,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from pathfinder.app.gradio_app import create_app
+from pathfinder.app.simple_demo import create_simple_app
 
 
 if __name__ == "__main__":
-    demo = create_app()
-    demo.launch()
+    create_simple_app().launch()

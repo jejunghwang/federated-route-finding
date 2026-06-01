@@ -9,15 +9,13 @@ from pathfinder.config import (
     load_classes_map,
     load_graph_config,
 )
-from pathfinder.inference import infer_single_image
-from pathfinder.models.classifier import load_checkpoint
 from pathfinder.route.graph import CampusGraph, validate_classes_subset
 from pathfinder.route.planner import Route, plan_route
-from pathfinder.route.stitching import _resolve_clip_for_edge, stitch_clips
+from pathfinder.app.simple_demo import PROCESSED_OUTPUT, _stitch_with_filter
+from pathfinder.route.stitching import resolve_clips
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ROUTE_CLIPS_DIR = PROJECT_ROOT / "data" / "route_clips"
-STITCHED_OUTPUT = ROUTE_CLIPS_DIR / "_stitched" / "route.mp4"
 
 
 def _predict_node_id_dummy(graph: CampusGraph, photo_path: str) -> tuple[str, float]:
@@ -34,38 +32,17 @@ def _predict_node_id_dummy(graph: CampusGraph, photo_path: str) -> tuple[str, fl
 
 
 def _build_route_output(graph: CampusGraph, route: Route) -> tuple[str, str | None]:
-    """경로를 (구간별 안내 markdown, 이어붙인 영상 경로)로 변환.
+    """경로를 (안내 markdown, 합쳐진 영상 경로)로 변환.
 
-    경로(노드 순서)는 항상 표시하고, 구간별로 영상 유무를 보여준다.
-    영상이 있는 구간만 이어붙이며, 없는 구간은 건너뛰고 로그/화면에 표시.
+    영상은 concat filter로 해상도/fps 정규화 후 음소거 + 4배속 재인코딩.
     """
     if route.is_empty:
-        print("[경로] 연결 경로 없음")
         return "**경로 없음** — 두 노드가 연결되어 있지 않습니다.", None
 
     node_line = " → ".join(graph.get_node(i).name for i in route.nodes)
-    print(f"[경로] {node_line}")
-
-    seg_lines = []
-    for idx, edge in enumerate(route.edges, 1):
-        a = graph.get_node(edge.a).name
-        b = graph.get_node(edge.b).name
-        clip = _resolve_clip_for_edge(edge, ROUTE_CLIPS_DIR)
-        if clip is not None:
-            seg_lines.append(f"{idx}. {a} → {b} — ▶ 영상 재생")
-            print(f"  [{idx}] {a} → {b} : {clip}")
-        else:
-            seg_lines.append(f"{idx}. {a} → {b} — ⚠ 영상 없음 (건너뜀)")
-            print(f"  [{idx}] {a} → {b} : (영상 없음, 건너뜀)")
-
-    video = stitch_clips(route.edges, clips_dir=ROUTE_CLIPS_DIR, output_path=STITCHED_OUTPUT)
-    if video is None:
-        print("  재생할 영상이 하나도 없습니다 (경로만 표시).")
-
-    path_md = (
-        f"**경로**\n\n{node_line}\n\n"
-        "**구간별 안내 영상**\n\n" + "\n".join(seg_lines)
-    )
+    clip_paths, _missing = resolve_clips(route.edges, ROUTE_CLIPS_DIR)
+    video = _stitch_with_filter(clip_paths, PROCESSED_OUTPUT, speed_x=4.0)
+    path_md = f"**경로** (음소거 · 4배속)\n\n{node_line}"
     return path_md, video
 
 
@@ -77,10 +54,14 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
 
     has_checkpoint = Path(checkpoint_path).exists()
     if has_checkpoint:
+        from pathfinder.inference import infer_single_image
+        from pathfinder.models.classifier import load_checkpoint
+
         ckpt = load_checkpoint(checkpoint_path)
         model_name = ckpt["model_name"]
         class_to_idx = ckpt["class_to_idx"]
     else:
+        infer_single_image = None
         model_name = "resnet18"
         class_to_idx = {slug: i for i, slug in enumerate(class_slugs)}
 

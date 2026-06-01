@@ -60,6 +60,8 @@
 | `central_library_jiphyeonjeon` | 집현전 앞 | (단서 추가) |
 | `central_library_310_front` | 310호 앞문 | (단서 추가) |
 | `central_library_310_back` | 310호 뒷문 | (단서 추가) |
+| `central_library_301_front` | (구 기념관) 301호 앞 | (단서 추가) |
+| `central_library_301_back` | (구 기념관) 301호 뒤 | (단서 추가) |
 | `central_library_4f` | 4층 | (단서 추가) |
 
 ---

@@ -17,3 +17,8 @@ outputs/reports/*.json
 outputs/reports/*.csv
 outputs/reports/*.txt
 data/manifests/*.csv
+
+# Route clip videos (heavy; not versioned)
+data/route_clips/**/*.mp4
+data/route_clips/_stitched/
+data/딥실_경로영상/
