@@ -1,17 +1,17 @@
 clients:
   hwang:
     owner_name: 황
-    buildings: [외부]
-    class_slugs: [main_gate, central_plaza]
-  jung:
-    owner_name: 정
-    buildings: [중앙도서관, 외부]
-    class_slugs: [central_library, fountain]
+    buildings: [비마관, 새빛관]
+    class_slugs: [saebit_301, saebit_816, saebit_rest_area_1, saebit_rest_area_2, saebit_sub_ev]
   shin:
     owner_name: 신
-    buildings: [외부, 새빛관]
-    class_slugs: [outdoor_court, saebit]
+    buildings: [참빛관]
+    class_slugs: [chambit_clock, chambit_park, chambit_B1, chambit_B101, chambit_smoking]
+  jung:
+    owner_name: 정
+    buildings: [80주년기념관, 외부]
+    class_slugs: [80_reading_room_3, 80_reading_room_1, 80_310_front, 80_310_back, 80_jiphyeonjeon]
   kim:
     owner_name: 김
-    buildings: [참빛관, 비마관]
-    class_slugs: [chambit, bima_smoking]
+    buildings: [화도관, 옥의관]
+    class_slugs: [hwado_1f_corridor, hwado_main_entrance, okui_3f_corridor, okui_elevator]

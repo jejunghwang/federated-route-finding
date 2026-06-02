@@ -1,7 +1,7 @@
 model:
-  name: resnet18
+  name: vit_b_16
   alternatives: [mobilenet_v3_small]
-  pretrained: false
+  pretrained: true
 
 data:
   image_size: 224
@@ -17,7 +17,7 @@ training:
   lr: 0.001
   weight_decay: 0.0001
   seed: 42
-  device: cpu
+  device: cuda
 
 paths:
   manifests_dir: data/manifests

@@ -7,22 +7,21 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-from pathfinder.config import load_classes_map, load_yaml
+from pathfinder.config import load_yaml
 from pathfinder.data.dataset import ManifestImageDataset
 from pathfinder.data.transforms import build_transforms
 from pathfinder.engine.metrics import compute_metrics
-from pathfinder.models.classifier import load_checkpoint
-from pathfinder.models.factory import build_model
+from pathfinder.models.classifier import build_model_from_checkpoint, load_checkpoint
 from pathfinder.utils.io import save_json
 
 
 def main() -> None:
     train_cfg = load_yaml("configs/train.yaml")
-    classes_map = load_classes_map("configs/classes.yaml")
-    class_slugs = list(classes_map.keys())
+    ckpt = load_checkpoint("outputs/checkpoints/global_merged.pt")
+    class_to_idx = ckpt["class_to_idx"]
+    class_slugs = [slug for slug, _ in sorted(class_to_idx.items(), key=lambda item: item[1])]
 
     test_df = pd.read_csv(Path(train_cfg["paths"]["manifests_dir"]) / "test.csv")
-    class_to_idx = {slug: i for i, slug in enumerate(class_slugs)}
     ds = ManifestImageDataset(
         test_df,
         class_to_idx,
@@ -30,8 +29,7 @@ def main() -> None:
     )
     loader = DataLoader(ds, batch_size=int(train_cfg["data"]["batch_size"]), shuffle=False)
 
-    ckpt = load_checkpoint("outputs/checkpoints/global_merged.pt")
-    model = build_model({"model": {"name": ckpt["model_name"], "pretrained": False}}, len(class_slugs))
+    model = build_model_from_checkpoint(ckpt)
     model.load_state_dict(ckpt["model_state_dict"], strict=True)
     model.eval()
 

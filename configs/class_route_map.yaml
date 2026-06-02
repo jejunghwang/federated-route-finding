@@ -1,0 +1,43 @@
+# Current checkpoint classes are fine-grained labels. Route planning uses the
+# larger outdoor nodes from graph.yaml, so inference must pass through this map.
+class_routes:
+  80_reading_room_3:
+    route_node: central_library
+    indoor_target: central_library_freeroom_3
+    display_name_ko: 80주년기념관 제3열람실
+  80_reading_room_1:
+    route_node: central_library
+    indoor_target: central_library_freeroom_1
+    display_name_ko: 80주년기념관 제1열람실
+  80_310_front:
+    route_node: central_library
+    indoor_target: central_library_310_front
+    display_name_ko: 80주년기념관 310호 앞
+  80_310_back:
+    route_node: central_library
+    indoor_target: central_library_310_back
+    display_name_ko: 80주년기념관 310호 뒤
+  80_jiphyeonjeon:
+    route_node: central_library
+    indoor_target: central_library_jiphyeonjeon
+    display_name_ko: 80주년기념관 집현전
+  chambit_clock:
+    route_node: chambit
+    indoor_target: chambit_1f_clock
+    display_name_ko: 참빛관 시계탑
+  chambit_park:
+    route_node: chambit
+    indoor_target: chambit_3f_garden
+    display_name_ko: 참빛관 공원
+  chambit_B1:
+    route_node: chambit
+    indoor_target: null
+    display_name_ko: 참빛관 지하1층
+  chambit_B101:
+    route_node: chambit
+    indoor_target: chambit_b101
+    display_name_ko: 참빛관 지하101호
+  chambit_smoking:
+    route_node: bima_smoking
+    indoor_target: null
+    display_name_ko: 참빛관 흡연구역

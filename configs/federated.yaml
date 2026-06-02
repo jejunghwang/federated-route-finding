@@ -4,11 +4,7 @@ output_checkpoint: outputs/checkpoints/global_merged.pt
 output_report: outputs/reports/merge_report.json
 
 local_checkpoints:
-  - client_id: hwang
-    checkpoint_path: outputs/checkpoints/hwang_best.pt
   - client_id: shin
     checkpoint_path: outputs/checkpoints/shin_best.pt
   - client_id: jung
     checkpoint_path: outputs/checkpoints/jung_best.pt
-  - client_id: kim
-    checkpoint_path: outputs/checkpoints/kim_best.pt

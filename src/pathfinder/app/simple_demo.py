@@ -57,6 +57,8 @@ INDOOR_CHAINS: dict[tuple[str, str], list[str]] = {
     ],
     ("central_library", "central_library_freeroom_3"): ["main_gate__central_library_freeroom_3"],
     ("central_library", "central_library_jiphyeonjeon"): ["main_gate__central_library_jiphyeonjeon"],
+    ("central_library", "central_library_310_front"): ["main_gate__central_library_301_front"],
+    ("central_library", "central_library_310_back"): ["main_gate__central_library_301_back"],
     ("central_library", "central_library_301_front"): ["main_gate__central_library_301_front"],
     ("central_library", "central_library_301_back"): ["main_gate__central_library_301_back"],
     ("central_library", "central_library_freeroom_1"): [
@@ -84,6 +86,28 @@ def _resolve_indoor_chain(outdoor_slug: str, indoor_slug: str) -> list[Path]:
         if p is not None:
             return [p]
     return []
+
+
+def _resolve_indoor_route_entry(
+    graph: CampusGraph,
+    outdoor_slug: str,
+    indoor_slug: str,
+) -> str:
+    """Return the graph node where an indoor clip chain begins.
+
+    Some prepared clips already include the walk from another outdoor node to a
+    fine-grained destination, e.g. ``main_gate__central_library_301_front``.
+    In that case the outdoor route should end at ``main_gate`` before the
+    indoor/detail chain is appended.
+    """
+    chain = INDOOR_CHAINS.get((outdoor_slug, indoor_slug))
+    if not chain:
+        return outdoor_slug
+
+    start, sep, _end = chain[0].partition("__")
+    if sep and graph.has_node(start):
+        return start
+    return outdoor_slug
 
 
 def _resolve_indoor_clip(outdoor_slug: str, indoor_slug: str) -> Path | None:
@@ -245,13 +269,15 @@ def create_simple_app():
         goal_outdoor = meta["outdoor"]
         indoor_slug = meta["indoor"]
 
-        route = plan_route(graph, start_id, goal_outdoor)
         indoor_clips: list[Path] = []
         indoor_display = None
+        route_goal = goal_outdoor
         if indoor_slug is not None:
             indoor_clips = _resolve_indoor_chain(goal_outdoor, indoor_slug)
             indoor_display = dest_label.strip(" └")
+            route_goal = _resolve_indoor_route_entry(graph, goal_outdoor, indoor_slug)
 
+        route = plan_route(graph, start_id, route_goal)
         return _build_route_output(graph, route, indoor_clips, indoor_display)
 
     def find_peer(a_name: str, b_name: str):

@@ -16,9 +16,11 @@ outputs/checkpoints/*.pth
 outputs/reports/*.json
 outputs/reports/*.csv
 outputs/reports/*.txt
+outputs/reports/*.mp4
 data/manifests/*.csv
 
 # Route clip videos (heavy; not versioned)
+data/route_clips/*.zip
 data/route_clips/**/*.mp4
 data/route_clips/_stitched/
 data/딥실_경로영상/

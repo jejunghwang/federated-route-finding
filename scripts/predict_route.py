@@ -11,7 +11,12 @@ from pathfinder.config import (
 )
 from pathfinder.inference import infer_single_image
 from pathfinder.models.classifier import load_checkpoint
-from pathfinder.route.graph import CampusGraph, validate_classes_subset
+from pathfinder.route.class_mapping import (
+    load_class_route_map,
+    resolve_route_node,
+    validate_class_routes,
+)
+from pathfinder.route.graph import CampusGraph
 from pathfinder.route.planner import plan_route
 from pathfinder.route.stitching import stitch_clips
 
@@ -42,9 +47,12 @@ def main() -> None:
         dst = args.destination_class
 
     graph = CampusGraph.from_config(load_graph_config(args.graph_config))
-    validate_classes_subset(graph, list(class_to_idx.keys()))
+    class_routes = load_class_route_map()
+    validate_class_routes(graph, class_to_idx.keys(), class_routes)
+    src_route = resolve_route_node(src, graph, class_routes)
+    dst_route = resolve_route_node(dst, graph, class_routes)
 
-    route = plan_route(graph, src, dst)
+    route = plan_route(graph, src_route.route_node, dst_route.route_node)
     node_path = list(route.nodes)
     edges = route.edges
     if edges:
@@ -57,7 +65,9 @@ def main() -> None:
     payload = {
         "predicted_class": src,
         "predicted_class_ko": classes_map.get(src, {}).get("display_name_ko", src),
+        "source_route_node": src_route.route_node,
         "destination_class": dst,
+        "destination_route_node": dst_route.route_node,
         "top3_predictions": current["top3"],
         "node_path": node_path,
         "edge_count": len(edges),

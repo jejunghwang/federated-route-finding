@@ -9,19 +9,25 @@ from pathfinder.config import (
     load_classes_map,
     load_graph_config,
 )
-from pathfinder.route.graph import CampusGraph, validate_classes_subset
-from pathfinder.route.planner import Route, plan_route
 from pathfinder.app.simple_demo import (
     INDOOR_TARGETS,
     PROCESSED_OUTPUT,
     _build_dest_choices,
     _resolve_indoor_chain,
+    _resolve_indoor_route_entry,
     _stitch_with_filter,
 )
-
-INDOOR_TO_OUTDOOR: dict[str, str] = {indoor: outdoor for outdoor, indoor, _ in INDOOR_TARGETS}
-INDOOR_DISPLAY_NAME: dict[str, str] = {indoor: name for _, indoor, name in INDOOR_TARGETS}
+from pathfinder.route.class_mapping import (
+    ClassRoute,
+    load_class_route_map,
+    resolve_route_node,
+    validate_class_routes,
+)
+from pathfinder.route.graph import CampusGraph, validate_classes_subset
+from pathfinder.route.planner import Route, plan_route
 from pathfinder.route.stitching import resolve_clips
+
+INDOOR_DISPLAY_NAME: dict[str, str] = {indoor: name for _, indoor, name in INDOOR_TARGETS}
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ROUTE_CLIPS_DIR = PROJECT_ROOT / "data" / "route_clips"
@@ -69,11 +75,20 @@ def _build_route_output(
     return path_md, video
 
 
+def _format_predicted_location(graph: CampusGraph, route: ClassRoute) -> str:
+    outdoor_name = graph.get_node(route.route_node).name
+    detail = route.display_name_ko
+    if detail is None and route.indoor_target is not None:
+        detail = INDOOR_DISPLAY_NAME.get(route.indoor_target)
+    return f"{outdoor_name} · {detail}" if detail else outdoor_name
+
+
 def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
     graph = CampusGraph.from_config(load_graph_config())
     class_map = load_classes_map("configs/classes.yaml")
     class_slugs = list(class_map.keys())
     validate_classes_subset(graph, class_slugs)
+    class_routes = load_class_route_map()
 
     has_checkpoint = Path(checkpoint_path).exists()
     if has_checkpoint:
@@ -83,6 +98,7 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
         ckpt = load_checkpoint(checkpoint_path)
         model_name = ckpt["model_name"]
         class_to_idx = ckpt["class_to_idx"]
+        validate_class_routes(graph, class_to_idx.keys(), class_routes)
     else:
         infer_single_image = None
         model_name = "resnet18"
@@ -112,21 +128,19 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
         goal_outdoor = meta["outdoor"]
         indoor_slug = meta["indoor"]
 
-        cur_outdoor = INDOOR_TO_OUTDOOR.get(cur_id, cur_id)
-        cur_indoor_name = INDOOR_DISPLAY_NAME.get(cur_id)
-        cur_outdoor_name = graph.get_node(cur_outdoor).name
-        cur_name = (
-            f"{cur_outdoor_name} · {cur_indoor_name}" if cur_indoor_name else cur_outdoor_name
-        )
-
-        route = plan_route(graph, cur_outdoor, goal_outdoor)
+        cur_route = resolve_route_node(cur_id, graph, class_routes)
+        cur_outdoor = cur_route.route_node
+        cur_name = _format_predicted_location(graph, cur_route)
 
         indoor_clips: list[Path] = []
         indoor_display = None
+        route_goal = goal_outdoor
         if indoor_slug is not None:
             indoor_clips = _resolve_indoor_chain(goal_outdoor, indoor_slug)
             indoor_display = dest_label.strip(" └")
+            route_goal = _resolve_indoor_route_entry(graph, goal_outdoor, indoor_slug)
 
+        route = plan_route(graph, cur_outdoor, route_goal)
         path_md, video = _build_route_output(graph, route, indoor_clips, indoor_display)
 
         return (
@@ -143,12 +157,24 @@ def create_app(checkpoint_path: str = "outputs/checkpoints/global_merged.pt"):
 
         cur_id, cur_conf, top3_text = _predict(current_photo)
         peer_id, peer_conf, _ = _predict(peer_photo)
-        cur_outdoor = INDOOR_TO_OUTDOOR.get(cur_id, cur_id)
-        peer_outdoor = INDOOR_TO_OUTDOOR.get(peer_id, peer_id)
-        route = plan_route(graph, cur_outdoor, peer_outdoor)
-        cur_name = graph.get_node(cur_outdoor).name
-        peer_name = graph.get_node(peer_outdoor).name
-        path_md, video = _build_route_output(graph, route)
+        cur_route = resolve_route_node(cur_id, graph, class_routes)
+        peer_route = resolve_route_node(peer_id, graph, class_routes)
+        cur_outdoor = cur_route.route_node
+        peer_outdoor = peer_route.route_node
+        cur_name = _format_predicted_location(graph, cur_route)
+        peer_name = _format_predicted_location(graph, peer_route)
+
+        indoor_clips: list[Path] = []
+        indoor_display = None
+        route_goal = peer_outdoor
+        if peer_route.indoor_target is not None:
+            indoor_clips = _resolve_indoor_chain(peer_outdoor, peer_route.indoor_target)
+            if indoor_clips:
+                indoor_display = peer_name
+                route_goal = _resolve_indoor_route_entry(graph, peer_outdoor, peer_route.indoor_target)
+
+        route = plan_route(graph, cur_outdoor, route_goal)
+        path_md, video = _build_route_output(graph, route, indoor_clips, indoor_display)
 
         return (
             top3_text,

@@ -4,8 +4,7 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from pathfinder.models.classifier import load_checkpoint
-from pathfinder.models.factory import build_model
+from pathfinder.models.classifier import build_model_from_checkpoint, load_checkpoint
 
 
 def infer_single_image(
@@ -17,8 +16,8 @@ def infer_single_image(
 ) -> dict:
     """사진 1장으로 위치 class를 추론. predict_route.py와 gradio_app.py 공용."""
     idx_to_class = {v: k for k, v in class_to_idx.items()}
-    model = build_model({"model": {"name": model_name, "pretrained": False}}, len(class_to_idx))
     ckpt = load_checkpoint(checkpoint_path)
+    model = build_model_from_checkpoint(ckpt)
     model.load_state_dict(ckpt["model_state_dict"], strict=True)
     model.eval()
 
